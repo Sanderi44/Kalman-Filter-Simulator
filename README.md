@@ -24,9 +24,10 @@ To run the program, simply type into the console, while in the virtual environme
 	python run.py
 ```
 The settings that can be adjusted from the run file are:
-1.  The number of landmarks (set to 20)
-2.  The maximum distance that the landmarks can be (set to 300)
-3.  The length of the car (set to 2)
-4.  The radius of the wheels (set to 0.5)
-5.  The time period for simulation (set 120 sec)
-6.  The time step (set to 0.1 sec)
+	
+	1.  The number of landmarks (set to 20)
+	2.  The maximum distance that the landmarks can be (set to 300)
+	3.  The length of the car (set to 2)
+	4.  The radius of the wheels (set to 0.5)
+	5.  The time period for simulation (set 120 sec)
+	6.  The time step (set to 0.1 sec)
