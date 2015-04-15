@@ -11,7 +11,7 @@ Clone the repository and cd into it.
 ```
 Start the virtual environment 
 ``` 
-	source /venv/bin/activate
+	source venv/bin/activate
 ```
 Install dependencies with requirements file:
 ```
