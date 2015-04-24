@@ -11,9 +11,9 @@ class imu():
 		self.theta_z = 0.0
 		
 		# True sensor bias
-		self.bias_x = 0.0
-		self.bias_y = 0.0
-		self.bias_z = 0.0
+		self.bias_x = 0.1
+		self.bias_y = 0.2
+		self.bias_z = 0.3
 
 		# Process Noise
 		self.processNoise = 1
@@ -22,24 +22,22 @@ class imu():
 		self.gyroStdDev_x = 0.4
 		self.gyroStdDev_y = 0.4
 		self.gyroStdDev_z = 0.4
-		self.gyroVar_x = self.gyroStdDev_x*self.gyroStdDev_x
-		self.gyroVar_y = self.gyroStdDev_y*self.gyroStdDev_y
-		self.gyroVar_z = self.gyroStdDev_z*self.gyroStdDev_z
+		self.gyroVar_x = pow(self.gyroStdDev_x, 2)
+		self.gyroVar_y = pow(self.gyroStdDev_y, 2)
+		self.gyroVar_z = pow(self.gyroStdDev_z, 2)
 
 		self.accStdDev_x = 0.4
 		self.accStdDev_y = 0.4
 		self.accStdDev_z = 0.4
-		self.accVar_x = self.accStdDev_x*self.accStdDev_x
-		self.accVar_y = self.accStdDev_y*self.accStdDev_y
-		self.accVar_z = self.accStdDev_z*self.accStdDev_z
-
+		self.accVar_x = pow(self.accStdDev_x, 2)
+		self.accVar_y = pow(self.accStdDev_y, 2)
+		self.accVar_z = pow(self.accStdDev_z, 2)
 		self.magStdDev_x = 0.4
 		self.magStdDev_y = 0.4
 		self.magStdDev_z = 0.4
-		self.magVar_x = self.magStdDev_x*self.magStdDev_x
-		self.magVar_y = self.magStdDev_y*self.magStdDev_y
-		self.magVar_z = self.magStdDev_z*self.magStdDev_z
-
+		self.magVar_x = pow(self.magStdDev_x, 2)
+		self.magVar_y = pow(self.magStdDev_y, 2)
+		self.magVar_z = pow(self.magStdDev_z, 2)
 		# time
 		self.time = 0
 		self.ts = ts
@@ -50,11 +48,11 @@ class imu():
 		# Matrices
 		self.states = np.zeros((6,1))
 		self.P = np.array([[self.gyroVar_x, 0, 0, 0, 0, 0],
-						   [0,				 1,0, 0, 0, 0],
+						   [0,				1, 0, 0, 0, 0],
 						   [0, 0, self.gyroVar_y, 0, 0, 0],
-						   [0, 0, 0, 		   1, 0, 0, 0],
+						   [0, 0, 0,	 		  1, 0, 0],
 						   [0, 0, 0, 0, self.gyroVar_z, 0],
-						   [0, 0, 0, 0, 0, 0, 			1]
+						   [0, 0, 0, 0, 0,		   		1]
 						])
 		self.Q = np.array([
 			[0.1, 0, 0],
@@ -104,9 +102,9 @@ class imu():
 
 	def get_predict_sensor(self):
 		# Get Gyroscope readings
-		self.gyro_x = self.wx + gauss(0, self.gyroStdDev_x)
-		self.gyro_y = self.wy + gauss(0, self.gyroStdDev_y)
-		self.gyro_z = self.wz + gauss(0, self.gyroStdDev_z)
+		self.gyro_x = self.wx + gauss(0, self.gyroStdDev_x) - self.bias_x
+		self.gyro_y = self.wy + gauss(0, self.gyroStdDev_y) - self.bias_y
+		self.gyro_z = self.wz + gauss(0, self.gyroStdDev_z) - self.bias_z
 		self.gyro = np.array([self.gyro_x, self.gyro_y, self.gyro_z])
 	
 	def get_update_sensor(self, acc_mag='acc'):
@@ -125,23 +123,33 @@ class imu():
 			pass
 
 	def update_prediction_matrices(self):
-		self.process_model = np.array([
-			[1, -self.ts, 0, 0, 0, 0],
-			[0, 1, 		  0, 0, 0, 0],
-			[0, 0, 1, -selt.ts, 0, 0],
-			[0, 0, 0, 		 1, 0, 0],
-			[0, 0, 0, 1, -self.ts, 0],
-			[0, 0, 0, 0, 0, 	   1]
+		self.A = np.array([
+			[1.0, -self.ts, 0, 0, 0, 0],
+			[0, 1.0, 		0, 0, 0, 0],
+			[0, 0, 1.0, -self.ts, 0, 0],
+			[0, 0, 0, 		 1.0, 0, 0],
+			[0, 0, 0, 0, 1.0, -self.ts],
+			[0, 0, 0, 0, 0, 	   1.0]
 		])
 
 		self.B = np.array([
-			[self.ts, 0, 0],
-			[0, 0, 		 0],
-			[0, self.ts, 0],
-			[0, 0, 		 0],
-			[0, 0, self.ts],
-			[0, 0, 		 0]
+			[self.ts, 0, 0, 0, 0, 0],
+			[0, 0, 		 0, 0, 0, 0],
+			[0, 0, self.ts, 0, 0, 0],
+			[0, 0, 		 0, 0, 0, 0],
+			[0, 0, 0, 0, self.ts, 0],
+			[0, 0, 		 0, 0, 0, 0]
 		])
+		self.inputs = np.array([
+			[self.gyro_x],
+			[0],
+			[self.gyro_y],
+			[0],
+			[self.gyro_z],
+			[0]
+		])
+
+		self.process_model = np.dot(self.A, self.states) + np.dot(self.B, self.inputs)
 
 		self.G = np.array([
 			[self.ts, 0, 0],
@@ -154,11 +162,11 @@ class imu():
 
 	def update_correction_matrices(self):
 		self.Z = np.array([
-			[atan2(self.acc_y/self.acc_z)],
+			[atan2(self.acc_y,self.acc_z)],
 			[0],
-			[atan2(self.acc_x/self.acc_z)],
+			[atan2(self.acc_x,self.acc_z)],
 			[0],
-			[atan2(self.acc_y/self.acc_x)],
+			[atan2(self.acc_y,self.acc_x)],
 			[0]
 		])
 
@@ -171,12 +179,11 @@ class imu():
 			[0, 0, 0, 0, 0, 0]
 		])
 
-		# V with Acc Noise matrix [[Nx],[Ny],[Nz]]
 		self.V = np.array([
-			[1, 0, 0],
-			[0, 0, 0],
-			[0, 1, 0],
-			[0, 0, 0],
-			[0, 0, 1],
-			[0, 0, 0]
+			[1, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0],
+			[0, 0, 1, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 1, 0],
+			[0, 0, 0, 0, 0, 0]
 		])
