@@ -48,12 +48,13 @@ class imu():
 		# Matrices
 		self.states = np.zeros((6,1))
 		self.P = np.array([[self.gyroVar_x, 0, 0, 0, 0, 0],
-						   [0,				1, 0, 0, 0, 0],
+						   [0, self.gyroVar_x, 0, 0, 0, 0],
 						   [0, 0, self.gyroVar_y, 0, 0, 0],
-						   [0, 0, 0,	 		  1, 0, 0],
+   						   [0, 0, 0, self.gyroVar_y, 0, 0],
 						   [0, 0, 0, 0, self.gyroVar_z, 0],
-						   [0, 0, 0, 0, 0,		   		1]
+   						   [0, 0, 0, 0, 0, self.gyroVar_z]
 						])
+
 		self.Q = np.array([
 			[0.1, 0, 0],
 			[0, 0.1, 0],
@@ -61,9 +62,12 @@ class imu():
 		])
 
 		self.R = np.array([
-			[self.accStdDev_x, 0, 0],
-			[0, self.accStdDev_y, 0],
-			[0, 0, self.accStdDev_z]
+			[self.accStdDev_x, 0, 0, 0, 0, 0],
+			[0, 			   1, 0, 0, 0, 0],
+			[0, 0, self.accStdDev_y, 0, 0, 0],
+			[0, 0, 0, 				 1, 0, 0],
+			[0, 0, 0, 0, self.accStdDev_z, 0],
+			[0, 0, 0, 0, 0, 			   1]
 		])
 
 		# Initial conditions
@@ -150,6 +154,7 @@ class imu():
 		])
 
 		self.process_model = np.dot(self.A, self.states) + np.dot(self.B, self.inputs)
+		self.states = self.process_model
 
 		self.G = np.array([
 			[self.ts, 0, 0],
@@ -180,10 +185,10 @@ class imu():
 		])
 
 		self.V = np.array([
-			[1, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0],
-			[0, 0, 1, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 1, 0],
-			[0, 0, 0, 0, 0, 0]
+			[1, 0, 0],
+			[0, 0, 0],
+			[0, 1, 0],
+			[0, 0, 0],
+			[0, 0, 1],
+			[0, 0, 0]
 		])
